@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DyeOptimAI - 결과 분석기</title>
+    <link rel="stylesheet" href="css/style.css">
+    <meta name="description" content="의류 염색 공정 최적화 AI 시스템의 결과 파일 분석 및 해석">
+</head>
+<body>
+<div class="header">
+    <h1>DyeOptimAI - 결과 분석기</h1>
+    <p>의류 염색 공정 최적화 AI 시스템의 결과 파일 분석 및 해석</p>
+</div>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-button" onclick="openTab(event, 'overview')">개요</button>
+        <button class="tab-button" onclick="openTab(event, 'correlation')">상관관계 히트맵</button>
+        <button class="tab-button" onclick="openTab(event, 'genetic')">유전 알고리즘 수렴</button>
+        <button class="tab-button" onclick="openTab(event, 'shap')">SHAP 변수 중요도</button>
+        <button class="tab-button" onclick="openTab(event, 'distribution')">종속변수 분포</button>
+        <button class="tab-button" onclick="openTab(event, 'predictions')">예측 vs 실제</button>
+        <button class="tab-button" onclick="openTab(event, 'optimization')">최적화 결과</button>
+    </div>
+
+    <!-- 개요 탭 -->
+    <div id="overview" class="tab-content">
+        <h2>DyeOptimAI 결과 분석 개요</h2>
+        <p>
+            DyeOptimAI는 의류 염색 공정의 품질을 예측하고 최적화하는 AI 시스템입니다.
+            이 분석기는 DyeOptimAI의 실행 결과를 시각화하고 해석하는 데 도움을 줍니다.
+        </p>
+
+        <div class="algorithm-box">
+            <h3>적용된 주요 알고리즘</h3>
+            <ul>
+                <li><strong>랜덤포레스트 회귀</strong>: 염색품질(염색색차 DE) 예측 모델</li>
+                <li><strong>유전 알고리즘</strong>: 목표 품질값 달성을 위한 공정 최적화</li>
+                <li><strong>SHAP(SHapley Additive exPlanations)</strong>: 변수 중요도 분석</li>
+            </ul>
+        </div>
+
+        <div class="analysis-box">
+            <h3>주요 분석 결과</h3>
+            <ul>
+                <li>모델 성능: Adjusted R² = 0.966, RMSE = 0.554, MAE = 0.331</li>
+                <li>주요 영향 변수: 단위중량(kg), 투입중량(kg), 포속3</li>
+                <li>유전 알고리즘을 통해 목표 염색색차 DE 1.5에 매우 근접한 최적 공정조건 도출</li>
+            </ul>
+        </div>
+
+        <h3>결과 파일 개요</h3>
+        <table>
+            <tr>
+                <th>결과 파일명</th>
+                <th>설명</th>
+                <th>적용 알고리즘</th>
+            </tr>
+            <tr>
+                <td>correlation_heatmap.png</td>
+                <td>변수 간 상관관계를 시각화한 히트맵</td>
+                <td>피어슨 상관계수</td>
+            </tr>
+            <tr>
+                <td>optimization_convergence.png</td>
+                <td>유전 알고리즘의 수렴 과정 그래프</td>
+                <td>유전 알고리즘</td>
+            </tr>
+            <tr>
+                <td>shap_feature_importance.png</td>
+                <td>변수 중요도 및 영향 방향 시각화</td>
+                <td>SHAP</td>
+            </tr>
+            <tr>
+                <td>target_distribution.png</td>
+                <td>염색색차 DE의 분포 히스토그램</td>
+                <td>통계적 분포 분석</td>
+            </tr>
+            <tr>
+                <td>prediction_vs_actual.png</td>
+                <td>모델 예측값과 실제값 비교 산점도</td>
+                <td>랜덤포레스트 회귀</td>
+            </tr>
+            <tr>
+                <td>summary_report.md</td>
+                <td>최적화 결과 요약 보고서</td>
+                <td>유전 알고리즘</td>
+            </tr>
+        </table>
+
+        <div class="insight-box">
+            <h3>주요 인사이트</h3>
+            <ol>
+                <li>단위중량과 투입중량이 염색품질에 가장 큰 영향을 미침</li>
+                <li>포속3은 염색색차 DE와 양의 상관관계를 가짐</li>
+                <li>지시온도와 진행온도는 매우 높은 상관관계(0.99)를 보여 다중공선성 문제로 하나만 선택</li>
+                <li>유전 알고리즘은 매우 빠르게 최적해에 수렴함</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- 상관관계 히트맵 탭 -->
+    <div id="correlation" class="tab-content">
+        <h2>변수 간 상관관계 히트맵</h2>
+
+        <div class="image-container">
+            <img src="../results/correlation_heatmap.png" alt="변수 간 상관관계 히트맵">
+            <p class="image-caption">변수 간 상관관계 히트맵(correlation_heatmap.png)</p>
+        </div>
+
+        <div class="algorithm-box">
+            <h3>적용 알고리즘: 피어슨 상관계수</h3>
+            <p>
+                피어슨 상관계수는 두 변수 간의 선형 관계를 측정하는 통계적 방법으로, -1에서 1 사이의 값을 가집니다.
+                1에 가까울수록 강한 양의 상관관계, -1에 가까울수록 강한 음의 상관관계, 0에 가까울수록 상관관계가 없음을 의미합니다.
+            </p>
+            <div class="code-box">
+                # 상관관계 분석 및 히트맵 생성 코드
+                correlation = df[numeric_cols].corr()
+                plt.figure(figsize=(12, 10))
+                sns.heatmap(correlation, annot=True, cmap='coolwarm',
+                vmin=-1, vmax=1, annot_kws={"size": 8})
+                plt.title('변수 간 상관관계')
+            </div>
+        </div>
+
+        <div class="analysis-box">
+            <h3>분석 방법</h3>
+            <ul>
+                <li><strong>색상 해석</strong>: 빨간색은 양의 상관관계, 파란색은 음의 상관관계, 밝을수록 약한 상관관계</li>
+                <li><strong>수치 해석</strong>: 각 셀의 숫자는 상관계수 값(-1~1)</li>
+                <li><strong>다중공선성 확인</strong>: |상관계수| ≥ 0.8인 변수 쌍은 다중공선성 문제 가능성 있음</li>
+            </ul>
+        </div>
+
+        <div class="insight-box">
+            <h3>주요 관찰 결과</h3>
+            <ol>
+                <li><strong>높은 상관관계(|r| ≥ 0.8)</strong>:
+                    <ul>
+                        <li>지시온도 - 진행온도: r = 0.99 (거의 완벽한 선형 관계)</li>
+                        <li>포속2 - 포속4: r = 0.88 (강한 양의 상관관계)</li>
+                    </ul>
+                </li>
+                <li><strong>중간 상관관계(0.3 < |r| < 0.8)</strong>:
+                    <ul>
+                        <li>투입중량/액량 - 단위중량: r = 0.47</li>
+                        <li>투입중량/액량 - 투입중량: r = 0.44</li>
+                        <li>포속3 - 염색색차 DE: r = 0.36 (종속변수와의 상관관계)</li>
+                    </ul>
+                </li>
+                <li><strong>종속변수(염색색차 DE)와의 상관관계</strong>:
+                    <ul>
+                        <li>포속3: r = 0.36 (가장 강한 양의 상관관계)</li>
+                        <li>투입중량/액량: r = 0.061 (약한 양의 상관관계)</li>
+                        <li>염색길이: r = -0.15 (약한 음의 상관관계)</li>
+                        <li>투입중량: r = -0.097 (약한 음의 상관관계)</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- 유전 알고리즘 수렴 탭 -->
+    <div id="genetic" class="tab-content">
+        <h2>유전 알고리즘 수렴 과정</h2>
+
+        <div class="image-container">
+            <img src="../results/optimization_convergence.png" alt="유전 알고리즘 수렴 과정">
+            <p class="image-caption">유전 알고리즘 수렴 과정(optimization_convergence.png)</p>
+        </div>
+
+        <div class="algorithm-box">
+            <h3>적용 알고리즘: 유전 알고리즘(Genetic Algorithm)</h3>
+            <p>
+                유전 알고리즘은 자연 선택과 유전학에서 영감을 받은 최적화 알고리즘으로,
+                전역 최적화(Global Optimization) 기법의 하나입니다. 생물의 진화 과정을 모방하여
+                세대를 거듭할수록 더 나은 해를 탐색합니다.
+            </p>
+            <div class="code-box">
+                # 유전 알고리즘 구성 코드
+                algorithm_params = {
+                'max_num_iteration': 500,     # 최대 세대 수
+                'population_size': 200,       # 초기 해집단 크기
+                'mutation_probability': 0.2,  # 변이 확률
+                'crossover_probability': 0.5, # 교차 확률
+                'parents_portion': 0.3,       # 부모 세대 비율
+                'crossover_type': 'uniform'   # 교차 방식
+                }
+
+                # 유전 알고리즘 실행
+                ga_model = geneticalgorithm(
+                function=objective_function,  # 목적 함수
+                dimension=len(variable_bounds),
+                variable_type='real',
+                variable_boundaries=variable_bounds,
+                algorithm_parameters=algorithm_params
+                )
+                ga_model.run()
+            </div>
+        </div>
+
+        <div class="analysis-box">
+            <h3>분석 방법</h3>
+            <ul>
+                <li><strong>x축</strong>: 세대 (Generation) - 알고리즘의 반복 횟수</li>
+                <li><strong>y축</strong>: 목적 함수 값 - 낮을수록 목표값에 가까움</li>
+                <li><strong>수렴 패턴</strong>: 그래프가 평평해지는 지점이 최적해에 도달한 시점</li>
+            </ul>
+        </div>
+
+        <div class="insight-box">
+            <h3>주요 관찰 결과</h3>
+            <ol>
+                <li><strong>빠른 초기 수렴</strong>: 매우 초기 세대에서 급격한 목적 함수 값 감소</li>
+                <li><strong>안정적인 유지</strong>: 최적해 발견 후 500세대까지 안정적으로 유지</li>
+                <li><strong>효율적인 탐색</strong>: 약 10-20세대 내에 거의 최적에 가까운 해 발견</li>
+                <li><strong>지역 최적해 탈출</strong>: 초기 급격한 감소 후 미세한 개선이 계속됨</li>
+            </ol>
+            <p>
+                이 결과는 유전 알고리즘이 염색공정 최적화에 매우 효율적으로 작동하며,
+                목표 염색색차 DE 값인 1.5에 매우 근접한 공정 조건을 빠르게 찾아냈음을 보여줍니다.
+            </p>
+        </div>
+
+        <table>
+            <tr>
+                <th>유전 알고리즘 파라미터</th>
+                <th>설정값</th>
+                <th>설명</th>
+            </tr>
+            <tr>
+                <td>max_num_iteration</td>
+                <td>500</td>
+                <td>최대 세대(반복) 수</td>
+            </tr>
+            <tr>
+                <td>population_size</td>
+                <td>200</td>
+                <td>각 세대의 개체 수</td>
+            </tr>
+            <tr>
+                <td>mutation_probability</td>
+                <td>0.2</td>
+                <td>변이 발생 확률</td>
+            </tr>
+            <tr>
+                <td>crossover_probability</td>
+                <td>0.5</td>
+                <td>교차 발생 확률</td>
+            </tr>
+            <tr>
+                <td>parents_portion</td>
+                <td>0.3</td>
+                <td>다음 세대에 보존되는 부모 비율</td>
+            </tr>
+            <tr>
+                <td>crossover_type</td>
+                <td>uniform</td>
+                <td>유전자 교차 방식</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- SHAP 변수 중요도 탭 -->
+    <div id="shap" class="tab-content">
+        <h2>SHAP 변수 중요도 분석</h2>
+
+        <div class="image-container">
+            <img src="../results/shap_feature_importance.png" alt="SHAP 변수 중요도">
+            <p class="image-caption">SHAP 변수 중요도 분석(shap_feature_importance.png)</p>
+        </div>
+
+        <div class="algorithm-box">
+            <h3>적용 알고리즘: SHAP(SHapley Additive exPlanations)</h3>
+            <p>
+                SHAP는 게임 이론의 Shapley 값을 기반으로 각 변수가 모델 예측에 미치는 개별 기여도를
+                계산하는 방법입니다. 이는 모델의 블랙박스 특성을 해석하고 이해하는 데 도움을 줍니다.
+            </p>
+            <div class="code-box">
+                # SHAP 분석 코드
+                explainer = shap.TreeExplainer(model)
+                shap_values = explainer.shap_values(X_train)
+                shap.summary_plot(shap_values, X_train)
+            </div>
+        </div>
+
+        <div class="analysis-box">
+            <h3>분석 방법</h3>
+            <ul>
+                <li><strong>y축</strong>: 변수(특성) - 중요도 순으로 정렬됨</li>
+                <li><strong>x축</strong>: SHAP 값 - 모델 출력에 대한 영향 크기 및 방향</li>
+                <li><strong>색상</strong>: 변수의 값 - 빨간색이 높은 값, 파란색이 낮은 값</li>
+                <li><strong>분포</strong>: 각 점은 하나의 데이터 포인트로, 분포 패턴을 보여줌</li>
+            </ul>
+        </div>
+
+        <div class="insight-box">
+            <h3>주요 관찰 결과</h3>
+            <ol>
+                <li><strong>중요 변수 순위</strong>:
+                    <ol>
+                        <li>투입중량/길이: 염색품질에 가장 큰 영향</li>
+                        <li>투입중량(kg): 높은 값이 염색품질 향상에 기여</li>
+                        <li>단위중량(kg): 양방향으로 복잡한 영향 패턴 보임</li>
+                        <li>포속3: 높은 값이 염색색차 DE를 증가시키는 경향</li>
+                        <li>투입중량/액량: 다양한 영향 패턴</li>
+                    </ol>
+                </li>
+                <li><strong>변수값에 따른 영향 방향</strong>:
+                    <ul>
+                        <li>투입중량/길이: 낮은 값(파란색)은 DE 값을 증가시키고, 높은 값(빨간색)은 감소시킴</li>
+                        <li>단위중량(kg): 중간 값에서 DE 값 감소, 극단 값에서 증가</li>
+                        <li>포속3: 높은 값(빨간색)은 DE 값을 증가시킴</li>
+                    </ul>
+                </li>
+                <li><strong>낮은 영향 변수</strong>:
+                    <ul>
+                        <li>공정진행시간(%): 상대적으로 영향 적음</li>
+                        <li>진행온도: 상대적으로 영향 적음</li>
+                        <li>포속1: 염색품질에 미치는 영향 미미</li>
+                    </ul>
+                </li>
+            </ol>
+            <p>
+                이러한 분석은 염색공정에서 품질 관리를 위해 어떤 변수에 중점을 두어야 하는지
+                명확한 지침을 제공합니다. 특히 투입중량/길이, 투입중량, 단위중량의 관리가 중요함을 알 수 있습니다.
+            </p>
+        </div>
+    </div>
+
+    <!-- 종속변수 분포 탭 -->
+    <div id="distribution" class="tab-content">
+        <h2>염색색차 DE 분포 분석</h2>
+
+        <div class="image-container">
+            <img src="../results/target_distribution.png" alt="염색색차 DE 분포">
+            <p class="image-caption">염색색차 DE 분포(target_distribution.png)</p>
+        </div>
+
+        <div class="algorithm-box">
+            <h3>적용 방법: 히스토그램 + 커널 밀도 추정(KDE)</h3>
+            <p>
+                히스토그램은 데이터의 분포를 시각화하는 가장 기본적인 방법이고,
+                KDE(Kernel Density Estimation)는 데이터의 확률 밀도 함수를 추정하여
+                부드러운 곡선으로 분포를 나타냅니다.
+            </p>
+            <div class="code-box">
+                # 종속변수 분포 시각화 코드
+                plt.figure(figsize=(10, 6))
+                sns.histplot(df['염색색차 DE'], kde=True)
+                plt.title('염색색차 DE 분포')
+            </div>
+        </div>
+
+        <div class="analysis-box">
+            <h3>분석 방법</h3>
+            <ul>
+                <li><strong>x축</strong>: 염색색차 DE 값</li>
+                <li><strong>y축</strong>: 빈도(Count)</li>
+                <li><strong>히스토그램</strong>: 각 구간(bin)별 데이터 개수</li>
+                <li><strong>파란 곡선</strong>: KDE로 추정한 확률 밀도 함수</li>
+            </ul>
+        </div>
+
+        <div class="insight-box">
+            <h3>주요 관찰 결과</h3>
+            <ol>
+                <li><strong>분포 특성</strong>:
+                    <ul>
+                        <li>오른쪽으로 긴 꼬리를 가진 비대칭 분포(right-skewed)</li>
+                        <li>대부분의 데이터가 0~2.5 범위에 집중</li>
+                        <li>중앙값(median)이 평균보다 작음</li>
+                    </ul>
+                </li>
+                <li><strong>빈도 피크</strong>:
+                    <ul>
+                        <li>주요 피크: 약 1.0~1.5 구간</li>
+                        <li>소규모 피크: 약 4.0~5.0 구간</li>
+                    </ul>
+                </li>
+                <li><strong>이상치</strong>:
+                    <ul>
+                        <li>약 5.0 이상의 값들이 산발적으로 존재</li>
+                        <li>최대값: 약 17.5</li>
+                    </ul>
+                </li>
+            </ol>
+            <p>
+                이 분포는 염색공정에서 대부분의 작업이 상대적으로 낮은 색차값(0~2.5)을 가지지만,
+                일부 공정에서는 상당히 높은 색차값이 발생할 수 있음을 보여줍니다.
+                모델링 및 최적화에서 이러한 분포 특성을 고려해야 합니다.
+            </p>
+        </div>
+
+        <h3>염색색차 DE 관련 통계</h3>
+        <table>
+            <tr>
+                <th>통계량</th>
+                <th>값</th>
+                <th>의미</th>
+            </tr>
+            <tr>
+                <td>평균</td>
+                <td>약 2.0</td>
+                <td>데이터의 중심 경향</td>
+            </tr>
+            <tr>
+                <td>중앙값</td>
+                <td>약 1.4</td>
+                <td>중앙에 위치한 값</td>
+            </tr>
+            <tr>
+                <td>표준편차</td>
+                <td>약 2.5</td>
+                <td>데이터의 분산 정도</td>
+            </tr>
+            <tr>
+                <td>첨도</td>
+                <td>양수</td>
+                <td>정규분포보다 뾰족한 분포</td>
+            </tr>
+            <tr>
+                <td>왜도</td>
+                <td>양수</td>
+                <td>오른쪽으로 긴 꼬리</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 예측 vs 실제 탭 -->
+    <div id="predictions" class="tab-content">
+        <h2>예측값 vs 실제값 분석</h2>
+
+        <div class="image-container">
+            <img src="../results/prediction_vs_actual.png" alt="예측값 vs 실제값">
+            <p class="image-caption">예측값 vs 실제값(prediction_vs_actual.png)</p>
+        </div>
+
+        <div class="algorithm-box">
+            <h3>적용 알고리즘: 랜덤포레스트 회귀</h3>
+            <p>
+                랜덤포레스트는 여러 결정 트리의 예측을 평균하는 앙상블 방법으로,
+                과적합에 강하고 비선형 관계를 잘 포착하는 장점이 있습니다.
+                이 그래프는 테스트 데이터셋에 대한 모델의 예측 성능을 보여줍니다.
+            </p>
+            <div class="code-box">
+                # 모델 예측 및 시각화 코드
+                y_pred = model.predict(X_test)
+                plt.figure(figsize=(8, 6))
+                plt.scatter(y_pred, y_test)
+                plt.title('예측값 vs 실제값 (랜덤포레스트 회귀)')
+                plt.xlabel('예측값')
+                plt.ylabel('실제값')
+            </div>
+        </div>
+
+        <div class="analysis-box">
+            <h3>분석 방법</h3>
+            <ul>
+                <li><strong>x축</strong>: 모델이 예측한 염색색차 DE 값</li>
+                <li><strong>y축</strong>: 실제 염색색차 DE 값</li>
+                <li><strong>이상적인 경우</strong>: 모든 점이 대각선(y=x) 위에 위치</li>
+                <li><strong>대각선 위</strong>: 모델이 과소예측(under-prediction)</li>
+                <li><strong>대각선 아래</strong>: 모델이 과대예측(over-prediction)</li>
+            </ul>
+        </div>
+
+        <div class="insight-box">
+            <h3>주요 관찰 결과</h3>
+            <ol>
+                <li><strong>전반적인 성능</strong>:
+                    <ul>
+                        <li>대부분의 점이 대각선 근처에 분포하여 높은 예측 정확도를 보임</li>
+                        <li>특히 0~2.5 범위에서 예측이 매우 정확함</li>
+                    </ul>
+                </li>
+                <li><strong>성능 차이</strong>:
+                    <ul>
+                        <li>낮은 DE 값(0~5): 매우 높은 예측 정확도</li>
+                        <li>중간 DE 값(5~10): 약간의 오차 존재</li>
+                        <li>높은 DE 값(10+): 상대적으로 큰 오차 발생</li>
+                    </ul>
+                </li>
+                <li><strong>예측 경향</strong>:
+                    <ul>
+                        <li>높은 DE 값에서 약간의 과소예측 경향</li>
+                        <li>대부분의 데이터가 낮은 DE 값 범위에 집중되어 모델이 이 영역에 최적화됨</li>
+                    </ul>
+                </li>
+            </ol>
+            <p>
+                이 분석은 구축된 랜덤포레스트 모델이 염색색차 DE를 매우 정확하게 예측하며,
+                특히 대부분의 실제 작업 범위인 낮은 DE 값 영역에서 뛰어난 성능을 보여줌을 확인합니다.
+            </p>
+        </div>
+
+        <h3>모델 성능 지표</h3>
+        <table>
+            <tr>
+                <th>지표</th>
+                <th>값</th>
+                <th>설명</th>
+            </tr>
+            <tr>
+                <td>Adjusted R²</td>
+                <td>0.966</td>
+                <td>모델이 데이터 변동의 96.6%를 설명 (1에 가까울수록 좋음)</td>
+            </tr>
+            <tr>
+                <td>RMSE</td>
+                <td>0.554</td>
+                <td>평균 제곱근 오차 (낮을수록 좋음)</td>
+            </tr>
+            <tr>
+                <td>MAE</td>
+                <td>0.331</td>
+                <td>평균 절대 오차 (낮을수록 좋음)</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 최적화 결과 탭 -->
+    <div id="optimization" class="tab-content">
+        <h2>공정 최적화 결과 분석</h2>
+
+        <div class="analysis-box">
+            <h3>최적화 목표</h3>
+            <p>
+                목표 염색색차 DE 값: <strong>1.5</strong><br>
+                유전 알고리즘을 통해 도출된 예측 염색색차 DE 값: <strong>1.5009</strong>
+            </p>
+            <p>
+                유전 알고리즘은 목표 값에 매우 근접한(오차: 0.0009) 최적 공정 조건을 성공적으로 도출했습니다.
+            </p>
+        </div>
+
+        <h3>최적 공정 변수 값</h3>
+        <table>
+            <tr>
+                <th>변수명</th>
+                <th>최적값</th>
+                <th>영향</th>
+            </tr>
+            <tr>
+                <td>단위중량(kg)</td>
+                <td>606.5346</td>
+                <td>염색품질에 큰 영향</td>
+            </tr>
+            <tr>
+                <td>투입중량(kg)</td>
+                <td>315.5907</td>
+                <td>염색품질에 큰 영향</td>
+            </tr>
+            <tr>
+                <td>염색길이(m)</td>
+                <td>98.5756</td>
+                <td>중간 정도의 영향</td>
+            </tr>
+            <tr>
+                <td>투입중량/길이</td>
+                <td>29.8733</td>
+                <td>염색품질에 큰 영향</td>
+            </tr>
+            <tr>
+                <td>투입중량/액량</td>
+                <td>0.0808</td>
+                <td>중간 정도의 영향</td>
+            </tr>
+            <tr>
+                <td>공정진행시간(%)</td>
+                <td>100.0000</td>
+                <td>제약 조건으로 고정됨</td>
+            </tr>
+            <tr>
+                <td>진행온도</td>
+                <td>95.8933</td>
+                <td>낮은 영향</td>
+            </tr>
+            <tr>
+                <td>포속1</td>
+                <td>1113.3645</td>
+                <td>낮은 영향</td>
+            </tr>
+            <tr>
+                <td>포속3</td>
+                <td>617.6485</td>
+                <td>중간 정도의 영향</td>
+            </tr>
+            <tr>
+                <td>포속4</td>
+                <td>618.5842</td>
+                <td>낮은 영향</td>
+            </tr>
+        </table>
+
+        <div class="insight-box">
+            <h3>최적화 결과 분석</h3>
+            <ol>
+                <li><strong>물리적 제약 고려</strong>:
+                    <ul>
+                        <li>도출된 최적값들은 유전 알고리즘에 설정된 변수 범위 내에 있음</li>
+                        <li>공정진행시간(%)은 100%로 고정하여 완전한 공정 조건을 도출</li>
+                    </ul>
+                </li>
+                <li><strong>주요 변수 설정</strong>:
+                    <ul>
+                        <li>단위중량: 상대적으로 높은 값 (606.5346kg)</li>
+                        <li>투입중량/길이 비율: 약 30의 값으로 설정</li>
+                        <li>포속3: 중간 정도의 값 (617.6485)</li>
+                    </ul>
+                </li>
+                <li><strong>특이사항</strong>:
+                    <ul>
+                        <li>높은 포속1 값 (1113.3645): 염색 품질에 대한 직접적 영향은 낮지만 최적 조합에 필요</li>
+                        <li>포속3과 포속4가 매우 유사한 값으로 설정됨 (617.6485 vs 618.5842)</li>
+                    </ul>
+                </li>
+            </ol>
+            <p>
+                이 최적화 결과는 실제 염색공정에 직접 적용 가능한 구체적인 공정 조건을 제시합니다.
+                다만, 실제 적용 전에 도메인 전문가의 검토를 통해 현실적인 제약조건을 추가로 고려할 필요가 있습니다.
+            </p>
+        </div>
+
+
+        <div class="code-box">
+            # 최적화 결과 코드 (summary_report.md)
+            # 의류 염색 공정 최적화 AI 시스템 - 결과 요약 보고서
+            생성 시간: 2025-04-17 20:09:40
+
+            ## 최적화 결과
+            목표 염색색차 DE: 1.5000
+            예측 염색색차 DE: 1.5009
+
+            ## 최적 공정 변수
+            - 단위중량(kg): 606.5346
+            - 투입중량(kg): 315.5907
+            - 염색길이(m): 98.5756
+            - 투입중량/길이: 29.8733
+            - 투입중량/액량: 0.0808
+            - 공정진행시간(%): 100.0000
+            - 진행온도: 95.8933
+            - 포속1: 1113.3645
+            - 포속3: 617.6485
+            - 포속4: 618.5842
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <p>DyeOptimAI - 의류 염색 공정 최적화 AI 시스템 &copy; 2025</p>
+    <p>데이터 출처: 중소벤처기업부, Korea AI Manufacturing Platform(KAMP), 의류 공정최적화 AI 데이터셋, 스마트제조혁신추진단(㈜임픽스), 2023.08.18., www.kamp-ai.kr</p>
+</div>
+
+<script src="js/script.js"></script>
+</body>
+</html>
