@@ -1,50 +1,58 @@
+# src/preprocessing/data_preprocessor.py
 import pandas as pd
 import numpy as np
 import warnings
 warnings.filterwarnings(action='ignore')
 
-def load_data():
-    """
-    데이터 파일을 로드합니다.
-    """
-    try:
-        # SET1: LOT 물량 정보
-        workload = pd.read_excel('data/LOT 물량.xlsx')
-        print("LOT 물량 데이터 로드 성공")
+from data_loader import load_all_data
+from data_cleaner import (clean_workload_data, clean_operation_data, clean_ccm_data,
+                          remove_outliers, remove_unnecessary_columns)
+from feature_engineering import create_workload_features, create_operation_features
+from data_merger import merge_datasets
 
-        # SET2: 시계열 설비데이터
-        operation = pd.read_csv('data/PRODUCTION_TREND.csv', encoding='CP949')
-        print("PRODUCTION_TREND 데이터 로드 성공")
+def preprocess_data():
+    """전체 데이터 전처리 프로세스를 실행합니다."""
+    print("데이터 로드 중...")
+    workload, operation, ccm = load_all_data()
 
-        # SET3: CCM 검사결과
-        ccm = pd.read_excel('data/CCM 측정값.xlsx')
-        print("CCM 측정값 데이터 로드 성공")
-
-        return workload, operation, ccm
-
-    except Exception as e:
-        print(f"데이터 로드 중 오류 발생: {e}")
-        return None, None, None
-
-def preprocess_data(workload, operation, ccm):
-    """
-    데이터 전처리를 수행합니다.
-    """
     if workload is None or operation is None or ccm is None:
+        print("데이터 로드 실패. 전처리를 중단합니다.")
         return None
 
-    # TODO: 가이드북에 따른 데이터 전처리 코드 구현
-    # 1. 데이터 형식 통일
-    # 2. 중복데이터 처리
-    # 3. 비유일성 데이터 처리
-    # 4. 파생변수 생성
-    # 5. 데이터셋 결합
-    # 6. 이상치 제거
-    # 7. 불필요한 열 제거
+    print("\n1. 데이터 정제 시작...")
+    workload_cleaned = clean_workload_data(workload)
+    operation_cleaned = clean_operation_data(operation)
+    ccm_cleaned = clean_ccm_data(ccm)
 
-    print("데이터 전처리 완료")
-    return None  # 전처리된 데이터 반환
+    print("\n2. 파생변수 생성 중...")
+    workload_with_features = create_workload_features(workload_cleaned)
+    operation_with_features = create_operation_features(operation_cleaned)
+
+    print("\n3. 데이터셋 병합 중...")
+    merged_data = merge_datasets(workload_with_features, operation_with_features, ccm_cleaned)
+
+    if merged_data is None:
+        print("데이터셋 병합 실패. 전처리를 중단합니다.")
+        return None
+
+    print("\n4. 이상치 제거 중...")
+    data_without_outliers = remove_outliers(merged_data)
+
+    print("\n5. 불필요한 열 제거 중...")
+    # 예: '투입액량(L)'과 '목표온도'가 불필요한 변수라고 판단되면 제거
+    excluded_columns = ['투입액량(L)', '목표온도']
+    final_data = remove_unnecessary_columns(data_without_outliers, excluded_columns)
+
+    print(f"\n전처리 완료. 최종 데이터셋: {final_data.shape[0]}행, {final_data.shape[1]}열")
+
+    # 전처리된 데이터 저장
+    final_data.to_csv('data/preprocessed_data.csv', index=False, encoding='utf-8-sig')
+    print("전처리된 데이터가 'data/preprocessed_data.csv'에 저장되었습니다.")
+
+    return final_data
 
 if __name__ == "__main__":
-    workload, operation, ccm = load_data()
-    processed_data = preprocess_data(workload, operation, ccm)
+    preprocessed_data = preprocess_data()
+    if preprocessed_data is not None:
+        print("\n전처리된 데이터 미리보기:")
+        print(preprocessed_data.head())

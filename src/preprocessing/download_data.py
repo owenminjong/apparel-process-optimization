@@ -1,10 +1,15 @@
 import os
 import gdown
+import requests
 from pathlib import Path
+import re
 
-def download_data():
+def download_data(force_download=False):
     """
     Google Drive에서 데이터 파일을 다운로드합니다.
+
+    Args:
+        force_download (bool): True이면 이미 파일이 존재해도 강제로 다시 다운로드합니다.
     """
     # 데이터 디렉토리 생성
     data_dir = Path("data")
@@ -12,8 +17,6 @@ def download_data():
 
     # Google Drive 공유 링크와 저장할 파일명 매핑
     files = {
-        # 실제 파일 공유 링크로 변경해야 합니다
-        # 각 파일의 공유 링크 (우클릭 > 공유 > 링크 복사)
         "https://docs.google.com/spreadsheets/d/1sbLfJ7BHnNqElwu2og2Q7MIy5yYX9ARl/edit?usp=drive_link&ouid=106112173059127185977&rtpof=true&sd=true": "LOT 물량.xlsx",
         "https://docs.google.com/spreadsheets/d/1mc3ta6B_-6Nce8jVusPCFusI0T0LI0vL/edit?usp=drive_link&ouid=106112173059127185977&rtpof=true&sd=true": "CCM 측정값.xlsx",
         "https://drive.google.com/file/d/1hayIWxFsoraECby4BUI4CLUO0-NEu1-2/view?usp=drive_link": "PRODUCTION_TREND.csv",
@@ -26,13 +29,23 @@ def download_data():
     # 파일 다운로드
     for file_url, filename in files.items():
         output_path = data_dir / filename
-        if not output_path.exists():
+
+        # 파일이 존재하지 않거나 강제 다운로드 옵션이 True인 경우 다운로드
+        if not output_path.exists() or force_download:
             print(f"다운로드 중: {filename}")
             try:
-                # file_id 추출 및 다운로드 URL 생성
-                file_id = file_url.split('/d/')[1].split('/')[0]
-                gdown.download(f"https://drive.google.com/uc?id={file_id}",
-                               str(output_path), quiet=False)
+                # 파일 유형에 따라 다른 처리
+                if "file/d/" in file_url:  # 일반 파일
+                    # file_id 추출
+                    file_id = re.search(r'file/d/([^/]+)', file_url).group(1)
+                    gdown.download(f"https://drive.google.com/uc?id={file_id}",
+                                   str(output_path), quiet=False)
+                elif "spreadsheets/d/" in file_url:  # 스프레드시트
+                    # file_id 추출
+                    file_id = re.search(r'spreadsheets/d/([^/]+)', file_url).group(1)
+                    gdown.download(f"https://drive.google.com/uc?id={file_id}&export=download",
+                                   str(output_path), quiet=False)
+
                 print(f"다운로드 완료: {filename}")
             except Exception as e:
                 print(f"다운로드 실패: {filename}, 오류: {e}")
@@ -40,4 +53,10 @@ def download_data():
             print(f"파일이 이미 존재합니다: {filename}")
 
 if __name__ == "__main__":
-    download_data()
+    import argparse
+
+    parser = argparse.ArgumentParser(description='데이터 파일 다운로드')
+    parser.add_argument('--force', action='store_true', help='이미 존재하는 파일도 강제로 다시 다운로드')
+    args = parser.parse_args()
+
+    download_data(force_download=args.force)
