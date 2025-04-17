@@ -4,11 +4,11 @@ import numpy as np
 import warnings
 warnings.filterwarnings(action='ignore')
 
-from data_loader import load_all_data
-from data_cleaner import (clean_workload_data, clean_operation_data, clean_ccm_data,
-                          remove_outliers, remove_unnecessary_columns)
-from feature_engineering import create_workload_features, create_operation_features
-from data_merger import merge_datasets
+from .data_loader import load_all_data
+from .data_cleaner import (clean_workload_data, clean_operation_data, clean_ccm_data,
+                           remove_outliers, remove_unnecessary_columns)
+from .feature_engineering import create_workload_features, create_operation_features
+from .data_merger import merge_datasets
 
 def preprocess_data():
     """전체 데이터 전처리 프로세스를 실행합니다."""

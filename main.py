@@ -1,23 +1,240 @@
-from src.preprocessing import download_data, data_preprocessor
-from src.modeling import model_builder
-from src.optimization import genetic_optimizer
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+의류 염색 공정 최적화 AI 시스템 (DyeOptimAI)
+"""
+
+import os
+import argparse
+import pandas as pd
+import time
+import matplotlib.pyplot as plt
+from pathlib import Path
+import logging
+
+# 로깅 설정
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("dyeoptim.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger("DyeOptimAI")
+
+# 디렉토리 생성
+os.makedirs('data', exist_ok=True)
+os.makedirs('models', exist_ok=True)
+os.makedirs('results', exist_ok=True)
+
+def parse_arguments():
+    """명령행 인수를 파싱합니다."""
+    parser = argparse.ArgumentParser(description='의류 염색 공정 최적화 AI 시스템')
+
+    parser.add_argument('--mode', type=str, default='full',
+                        choices=['full', 'download', 'preprocess', 'model', 'optimize'],
+                        help='실행 모드 (기본값: full)')
+
+    parser.add_argument('--force-download', action='store_true',
+                        help='이미 존재하는 데이터 파일도 강제로 다시 다운로드')
+
+    parser.add_argument('--target', type=float, default=1.5,
+                        help='목표 염색색차 DE 값 (기본값: 1.5)')
+
+    parser.add_argument('--no-download', action='store_true',
+                        help='데이터 다운로드 단계 건너뛰기')
+
+    parser.add_argument('--no-preprocess', action='store_true',
+                        help='데이터 전처리 단계 건너뛰기')
+
+    parser.add_argument('--no-model', action='store_true',
+                        help='모델링 단계 건너뛰기')
+
+    parser.add_argument('--no-optimize', action='store_true',
+                        help='최적화 단계 건너뛰기')
+
+    return parser.parse_args()
+
+def download_data(force=False):
+    """데이터를 다운로드합니다."""
+    from src.preprocessing.download_data import download_data
+
+    logger.info("데이터 다운로드 중...")
+    start_time = time.time()
+
+    download_data(force_download=force)
+
+    elapsed_time = time.time() - start_time
+    logger.info(f"데이터 다운로드 완료! (소요 시간: {elapsed_time:.2f}초)")
+
+def preprocess_data():
+    """데이터를 전처리합니다."""
+    from src.preprocessing.data_preprocessor import preprocess_data
+
+    logger.info("데이터 전처리 중...")
+    start_time = time.time()
+
+    preprocessed_data = preprocess_data()
+
+    if preprocessed_data is None:
+        logger.error("데이터 전처리 실패!")
+        return False
+
+    elapsed_time = time.time() - start_time
+    logger.info(f"데이터 전처리 완료! (소요 시간: {elapsed_time:.2f}초)")
+
+    return True
+
+def build_model():
+    """모델을 구축합니다."""
+    from src.modeling.model_builder import run_modeling_pipeline
+
+    logger.info("모델 구축 중...")
+    start_time = time.time()
+
+    model_results = run_modeling_pipeline()
+
+    if model_results is None:
+        logger.error("모델 구축 실패!")
+        return False
+
+    elapsed_time = time.time() - start_time
+    logger.info(f"모델 구축 완료! (소요 시간: {elapsed_time:.2f}초)")
+    logger.info(f"모델 성능: Adjusted R² = {model_results['metrics']['adjusted_r2']:.3f}, "
+                f"RMSE = {model_results['metrics']['rmse']:.3f}, "
+                f"MAE = {model_results['metrics']['mae']:.3f}")
+
+    return True
+
+def optimize_process(target_value=1.5):
+    """공정 최적화를 수행합니다."""
+    from src.optimization.genetic_optimizer import run_optimization_pipeline
+
+    logger.info(f"공정 최적화 중... (목표값: {target_value})")
+    start_time = time.time()
+
+    optimization_result = run_optimization_pipeline(target_value=target_value)
+
+    if optimization_result is None:
+        logger.error("공정 최적화 실패!")
+        return False
+
+    elapsed_time = time.time() - start_time
+    logger.info(f"공정 최적화 완료! (소요 시간: {elapsed_time:.2f}초)")
+    logger.info(f"목표값: {target_value:.4f}, 예측값: {optimization_result['predicted_value']:.4f}")
+
+    # 최적화 결과 요약
+    logger.info("최적 공정 변수:")
+    for name, value in optimization_result['optimal_parameters'].items():
+        logger.info(f"  {name}: {value:.4f}")
+
+    return True
+
+def visualize_results():
+    """결과를 시각화합니다."""
+    logger.info("결과 시각화 중...")
+
+    # 모델링 결과 확인
+    prediction_plot = Path('results/prediction_vs_actual.png')
+    feature_importance_plot = Path('results/shap_feature_importance.png')
+
+    # 최적화 결과 확인
+    convergence_plot = Path('results/optimization_convergence.png')
+
+    # 결과 요약 보고서 생성
+    generate_summary_report()
+
+    logger.info("결과 시각화 완료!")
+    logger.info(f"모든 결과는 'results/' 폴더에서 확인할 수 있습니다.")
+
+def generate_summary_report():
+    """결과 요약 보고서를 생성합니다."""
+    from datetime import datetime
+    import json
+
+    try:
+        # 모델 성능 정보 로드
+        with open('results/optimization_result.json', 'r') as f:
+            optimization_result = json.load(f)
+
+        # 요약 보고서 생성
+        report = [
+            "# 의류 염색 공정 최적화 AI 시스템 - 결과 요약 보고서",
+            f"생성 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            "",
+            "## 최적화 결과",
+            f"목표 염색색차 DE: {optimization_result['target_value']:.4f}",
+            f"예측 염색색차 DE: {optimization_result['predicted_value']:.4f}",
+            "",
+            "## 최적 공정 변수"
+        ]
+
+        # 최적 공정 변수 추가
+        for name, value in optimization_result['optimal_parameters'].items():
+            report.append(f"- {name}: {value:.4f}")
+
+        # 보고서 저장
+        with open('results/summary_report.md', 'w') as f:
+            f.write('\n'.join(report))
+
+        logger.info("요약 보고서가 'results/summary_report.md'에 저장되었습니다.")
+    except Exception as e:
+        logger.error(f"요약 보고서 생성 실패: {e}")
+
+def full_pipeline(args):
+    """전체 파이프라인을 실행합니다."""
+    logger.info("=== 의류 염색 공정 최적화 AI 시스템 실행 ===")
+    start_time = time.time()
+
+    # 1. 데이터 다운로드
+    if not args.no_download:
+        download_data(args.force_download)
+    else:
+        logger.info("데이터 다운로드 단계 건너뜀")
+
+    # 2. 데이터 전처리
+    if not args.no_preprocess:
+        if not preprocess_data():
+            return
+    else:
+        logger.info("데이터 전처리 단계 건너뜀")
+
+    # 3. 모델 구축
+    if not args.no_model:
+        if not build_model():
+            return
+    else:
+        logger.info("모델 구축 단계 건너뜀")
+
+    # 4. 공정 최적화
+    if not args.no_optimize:
+        if not optimize_process(args.target):
+            return
+    else:
+        logger.info("공정 최적화 단계 건너뜀")
+
+    # 5. 결과 시각화
+    visualize_results()
+
+    elapsed_time = time.time() - start_time
+    logger.info(f"=== 전체 파이프라인 완료! (총 소요 시간: {elapsed_time:.2f}초) ===")
 
 def main():
-    # 1. 데이터 다운로드
-    print("1. 데이터 다운로드 중...")
-    download_data.download_data()
+    """메인 함수"""
+    args = parse_arguments()
 
-    # 2. 데이터 로드 및 전처리
-    print("\n2. 데이터 로드 및 전처리 중...")
-    workload, operation, ccm = data_preprocessor.load_data()
-    processed_data = data_preprocessor.preprocess_data(workload, operation, ccm)
-
-    # TODO: 나머지 코드 구현
-    # 3. 모델 구축
-    # 4. 최적화 수행
-    # 5. 결과 시각화 및 저장
-
-    print("\n프로세스 완료!")
+    if args.mode == 'full':
+        full_pipeline(args)
+    elif args.mode == 'download':
+        download_data(args.force_download)
+    elif args.mode == 'preprocess':
+        preprocess_data()
+    elif args.mode == 'model':
+        build_model()
+    elif args.mode == 'optimize':
+        optimize_process(args.target)
 
 if __name__ == "__main__":
     main()
