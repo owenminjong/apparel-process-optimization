@@ -49,6 +49,10 @@ def preprocess_data():
     final_data.to_csv('data/preprocessed_data.csv', index=False, encoding='utf-8-sig')
     print("전처리된 데이터가 'data/preprocessed_data.csv'에 저장되었습니다.")
 
+    # 검증 함수 호출 추가
+    from .validate_results import validate_preprocessing_results
+    validate_preprocessing_results()
+
     return final_data
 
 if __name__ == "__main__":

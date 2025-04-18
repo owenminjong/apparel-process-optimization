@@ -7,7 +7,8 @@ from . import data_cleaner
 from . import feature_engineering
 from . import data_merger
 from . import data_preprocessor
-from . import validate_results
+# validate_results를 제일 마지막에 임포트하거나 함수만 가져오도록 수정
+from .validate_results import validate_preprocessing_results
 
 # 모듈 편의 함수 노출
 from .download_data import download_data

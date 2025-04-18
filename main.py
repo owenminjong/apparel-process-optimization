@@ -34,7 +34,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='의류 염색 공정 최적화 AI 시스템')
 
     parser.add_argument('--mode', type=str, default='full',
-                        choices=['full', 'download', 'preprocess', 'model', 'optimize'],
+                        choices=['full', 'download', 'preprocess', 'model', 'optimize', 'validate'],
                         help='실행 모드 (기본값: full)')
 
     parser.add_argument('--force-download', action='store_true',
@@ -153,36 +153,90 @@ def generate_summary_report():
     """결과 요약 보고서를 생성합니다."""
     from datetime import datetime
     import json
+    import os
 
     try:
-        # 모델 성능 정보 로드
-        with open('results/optimization_result.json', 'r') as f:
+        # 결과 디렉토리 확인 및 생성
+        if not os.path.exists('results'):
+            os.makedirs('results')
+
+        # optimization_result.json 파일 존재 확인
+        json_path = 'results/optimization_result.json'
+        if not os.path.exists(json_path):
+            logger.warning("최적화 결과 파일이 없습니다. 기본 보고서를 생성합니다.")
+
+            # 기본 보고서 생성
+            report = [
+                "# 의류 염색 공정 최적화 AI 시스템 - 결과 요약 보고서",
+                f"생성 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                "",
+                "## 알림",
+                "최적화 과정이 완료되지 않았거나 결과를 저장하지 못했습니다.",
+                "파이프라인을 다시 실행하여 최적화를 진행해주세요."
+            ]
+
+            # 보고서 저장
+            with open('results/summary_report.md', 'w', encoding='utf-8') as f:
+                f.write('\n'.join(report))
+
+            logger.info("기본 요약 보고서가 'results/summary_report.md'에 저장되었습니다.")
+            return True
+
+        # 파일 로드
+        with open(json_path, 'r') as f:
             optimization_result = json.load(f)
 
-        # 요약 보고서 생성
-        report = [
-            "# 의류 염색 공정 최적화 AI 시스템 - 결과 요약 보고서",
-            f"생성 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            "",
-            "## 최적화 결과",
-            f"목표 염색색차 DE: {optimization_result['target_value']:.4f}",
-            f"예측 염색색차 DE: {optimization_result['predicted_value']:.4f}",
-            "",
-            "## 최적 공정 변수"
-        ]
+        # 오류 확인
+        if 'error' in optimization_result:
+            logger.warning(f"최적화 중 오류 발생: {optimization_result['error']}")
+            report = [
+                "# 의류 염색 공정 최적화 AI 시스템 - 결과 요약 보고서",
+                f"생성 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                "",
+                "## 오류 발생",
+                f"최적화 중 오류가 발생했습니다: {optimization_result['error']}",
+                "",
+                "## 목표값",
+                f"목표 염색색차 DE: {optimization_result['target_value']:.4f}"
+            ]
 
-        # 최적 공정 변수 추가
-        for name, value in optimization_result['optimal_parameters'].items():
-            report.append(f"- {name}: {value:.4f}")
+            # 추가 정보가 있으면 추가
+            if 'optimal_parameters' in optimization_result and isinstance(optimization_result['optimal_parameters'], dict):
+                report.append("")
+                report.append("## 임시 공정 변수")
+                for name, value in optimization_result['optimal_parameters'].items():
+                    if isinstance(value, (int, float)):
+                        report.append(f"- {name}: {value:.4f}")
+                    else:
+                        report.append(f"- {name}: {value}")
+        else:
+            # 정상 요약 보고서 생성
+            report = [
+                "# 의류 염색 공정 최적화 AI 시스템 - 결과 요약 보고서",
+                f"생성 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                "",
+                "## 최적화 결과",
+                f"목표 염색색차 DE: {optimization_result['target_value']:.4f}",
+                f"예측 염색색차 DE: {optimization_result['predicted_value']:.4f}",
+                "",
+                "## 최적 공정 변수"
+            ]
+
+            # 최적 공정 변수 추가
+            for name, value in optimization_result['optimal_parameters'].items():
+                report.append(f"- {name}: {value:.4f}")
 
         # 보고서 저장
-        with open('results/summary_report.md', 'w') as f:
+        with open('results/summary_report.md', 'w', encoding='utf-8') as f:
             f.write('\n'.join(report))
 
         logger.info("요약 보고서가 'results/summary_report.md'에 저장되었습니다.")
+        return True
     except Exception as e:
         logger.error(f"요약 보고서 생성 실패: {e}")
-
+        import traceback
+        traceback.print_exc()
+        return False
 def full_pipeline(args):
     """전체 파이프라인을 실행합니다."""
     logger.info("=== 의류 염색 공정 최적화 AI 시스템 실행 ===")
@@ -235,6 +289,9 @@ def main():
         build_model()
     elif args.mode == 'optimize':
         optimize_process(args.target)
+    elif args.mode == 'validate':
+        from src.preprocessing.validate_results import validate_preprocessing_results
+        validate_preprocessing_results()
 
 if __name__ == "__main__":
     main()
