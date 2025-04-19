@@ -22,6 +22,7 @@
         <button class="tab-button" onclick="openTab(event, 'distribution')">종속변수 분포</button>
         <button class="tab-button" onclick="openTab(event, 'predictions')">예측 vs 실제</button>
         <button class="tab-button" onclick="openTab(event, 'optimization')">최적화 결과</button>
+        <button class="tab-button" onclick="openTab(event, 'consistency')">일관성 테스트</button>
     </div>
 
     <!-- 개요 탭 -->
@@ -31,6 +32,8 @@
             DyeOptimAI는 의류 염색 공정의 품질을 예측하고 최적화하는 AI 시스템입니다.
             이 분석기는 DyeOptimAI의 실행 결과를 시각화하고 해석하는 데 도움을 줍니다.
         </p>
+
+        <p id="last-updated" class="updated-info">마지막 업데이트: 로딩 중...</p>
 
         <div class="algorithm-box">
             <h3>적용된 주요 알고리즘</h3>
@@ -44,9 +47,9 @@
         <div class="analysis-box">
             <h3>주요 분석 결과</h3>
             <ul>
-                <li>모델 성능: Adjusted R² = 0.966, RMSE = 0.554, MAE = 0.331</li>
+                <li>모델 성능: Adjusted R² = <span id="model-r2">로딩 중...</span>, RMSE = <span id="model-rmse">로딩 중...</span>, MAE = <span id="model-mae">로딩 중...</span></li>
                 <li>주요 영향 변수: 단위중량(kg), 투입중량(kg), 포속3</li>
-                <li>유전 알고리즘을 통해 목표 염색색차 DE 1.5에 매우 근접한 최적 공정조건 도출</li>
+                <li>유전 알고리즘을 통해 목표 염색색차 DE <span id="target-value">로딩 중...</span>에 매우 근접한 최적 공정조건 도출</li>
             </ul>
         </div>
 
@@ -226,7 +229,7 @@
             </ol>
             <p>
                 이 결과는 유전 알고리즘이 염색공정 최적화에 매우 효율적으로 작동하며,
-                목표 염색색차 DE 값인 1.5에 매우 근접한 공정 조건을 빠르게 찾아냈음을 보여줍니다.
+                목표 염색색차 DE 값인 <span id="genetic-target-value">1.5</span>에 매우 근접한 공정 조건을 빠르게 찾아냈음을 보여줍니다.
             </p>
         </div>
 
@@ -470,7 +473,7 @@
         <div class="analysis-box">
             <h3>분석 방법</h3>
             <ul>
-                <li><strong>x축</strong>: 모델이 예측한 염색색차 DE 값</li>
+                <li><strong>x축</strong>: 모델이 예측한 염색색차 DE 값
                 <li><strong>y축</strong>: 실제 염색색차 DE 값</li>
                 <li><strong>이상적인 경우</strong>: 모든 점이 대각선(y=x) 위에 위치</li>
                 <li><strong>대각선 위</strong>: 모델이 과소예측(under-prediction)</li>
@@ -516,17 +519,17 @@
             </tr>
             <tr>
                 <td>Adjusted R²</td>
-                <td>0.966</td>
-                <td>모델이 데이터 변동의 96.6%를 설명 (1에 가까울수록 좋음)</td>
+                <td id="prediction-r2">로딩 중...</td>
+                <td>모델이 데이터 변동을 설명하는 비율 (1에 가까울수록 좋음)</td>
             </tr>
             <tr>
                 <td>RMSE</td>
-                <td>0.554</td>
+                <td id="prediction-rmse">로딩 중...</td>
                 <td>평균 제곱근 오차 (낮을수록 좋음)</td>
             </tr>
             <tr>
                 <td>MAE</td>
-                <td>0.331</td>
+                <td id="prediction-mae">로딩 중...</td>
                 <td>평균 절대 오차 (낮을수록 좋음)</td>
             </tr>
         </table>
@@ -539,70 +542,26 @@
         <div class="analysis-box">
             <h3>최적화 목표</h3>
             <p>
-                목표 염색색차 DE 값: <strong>1.5</strong><br>
-                유전 알고리즘을 통해 도출된 예측 염색색차 DE 값: <strong>1.5009</strong>
+                목표 염색색차 DE 값: <strong id="optimization-target">로딩 중...</strong><br>
+                유전 알고리즘을 통해 도출된 예측 염색색차 DE 값: <strong id="optimization-predicted">로딩 중...</strong><br>
+                오차: <strong id="optimization-error">로딩 중...</strong>
             </p>
             <p>
-                유전 알고리즘은 목표 값에 매우 근접한(오차: 0.0009) 최적 공정 조건을 성공적으로 도출했습니다.
+                유전 알고리즘은 목표 값에 매우 근접한 최적 공정 조건을 성공적으로 도출했습니다.
             </p>
         </div>
 
         <h3>최적 공정 변수 값</h3>
-        <table>
+        <table id="optimal-parameters-table">
             <tr>
                 <th>변수명</th>
                 <th>최적값</th>
                 <th>영향</th>
             </tr>
             <tr>
-                <td>단위중량(kg)</td>
-                <td>606.5346</td>
-                <td>염색품질에 큰 영향</td>
-            </tr>
-            <tr>
-                <td>투입중량(kg)</td>
-                <td>315.5907</td>
-                <td>염색품질에 큰 영향</td>
-            </tr>
-            <tr>
-                <td>염색길이(m)</td>
-                <td>98.5756</td>
-                <td>중간 정도의 영향</td>
-            </tr>
-            <tr>
-                <td>투입중량/길이</td>
-                <td>29.8733</td>
-                <td>염색품질에 큰 영향</td>
-            </tr>
-            <tr>
-                <td>투입중량/액량</td>
-                <td>0.0808</td>
-                <td>중간 정도의 영향</td>
-            </tr>
-            <tr>
-                <td>공정진행시간(%)</td>
-                <td>100.0000</td>
-                <td>제약 조건으로 고정됨</td>
-            </tr>
-            <tr>
-                <td>진행온도</td>
-                <td>95.8933</td>
-                <td>낮은 영향</td>
-            </tr>
-            <tr>
-                <td>포속1</td>
-                <td>1113.3645</td>
-                <td>낮은 영향</td>
-            </tr>
-            <tr>
-                <td>포속3</td>
-                <td>617.6485</td>
-                <td>중간 정도의 영향</td>
-            </tr>
-            <tr>
-                <td>포속4</td>
-                <td>618.5842</td>
-                <td>낮은 영향</td>
+                <td>로딩 중...</td>
+                <td>로딩 중...</td>
+                <td>로딩 중...</td>
             </tr>
         </table>
 
@@ -617,15 +576,15 @@
                 </li>
                 <li><strong>주요 변수 설정</strong>:
                     <ul>
-                        <li>단위중량: 상대적으로 높은 값 (606.5346kg)</li>
-                        <li>투입중량/길이 비율: 약 30의 값으로 설정</li>
-                        <li>포속3: 중간 정도의 값 (617.6485)</li>
+                        <li>단위중량: 실험 범위 내에서 최적값 도출</li>
+                        <li>투입중량/길이 비율: 최적 비율 도출</li>
+                        <li>포속3: 중간 정도의 값으로 설정</li>
                     </ul>
                 </li>
                 <li><strong>특이사항</strong>:
                     <ul>
-                        <li>높은 포속1 값 (1113.3645): 염색 품질에 대한 직접적 영향은 낮지만 최적 조합에 필요</li>
-                        <li>포속3과 포속4가 매우 유사한 값으로 설정됨 (617.6485 vs 618.5842)</li>
+                        <li>포속1과 포속4의 균형: 염색 품질에 직접적 영향은 낮지만 최적 조합에 필요</li>
+                        <li>포속 변수들 간의 상호작용이 중요한 역할을 함</li>
                     </ul>
                 </li>
             </ol>
@@ -634,28 +593,98 @@
                 다만, 실제 적용 전에 도메인 전문가의 검토를 통해 현실적인 제약조건을 추가로 고려할 필요가 있습니다.
             </p>
         </div>
+    </div>
 
+    <!-- 일관성 테스트 탭 -->
+    <div id="consistency" class="tab-content">
+        <h2>일관성 테스트 결과</h2>
 
-        <div class="code-box">
-            # 최적화 결과 코드 (summary_report.md)
-            # 의류 염색 공정 최적화 AI 시스템 - 결과 요약 보고서
-            생성 시간: 2025-04-17 20:09:40
+        <div class="analysis-box">
+            <h3>일관성 테스트 개요</h3>
+            <p>
+                일관성 테스트는 모델과 최적화 알고리즘의 안정성을 평가하기 위해 수행되었습니다.
+                다양한 랜덤 시드와 초기 조건에서 반복 실행하여 결과의 일관성을 확인하였습니다.
+            </p>
+            <p>
+                테스트 횟수: <strong id="n-tests">로딩 중...</strong>
+            </p>
+        </div>
 
-            ## 최적화 결과
-            목표 염색색차 DE: 1.5000
-            예측 염색색차 DE: 1.5009
+        <div class="columns-container">
+            <div class="column">
+                <h3>모델 일관성</h3>
+                <table>
+                    <tr>
+                        <th>지표</th>
+                        <th>평균</th>
+                        <th>변동 계수</th>
+                    </tr>
+                    <tr>
+                        <td>Adjusted R²</td>
+                        <td id="consistency-r2-mean">로딩 중...</td>
+                        <td id="model-r2-variability">로딩 중...</td>
+                    </tr>
+                    <tr>
+                        <td>RMSE</td>
+                        <td id="consistency-rmse-mean">로딩 중...</td>
+                        <td id="model-rmse-variability">로딩 중...</td>
+                    </tr>
+                    <tr>
+                        <td>MAE</td>
+                        <td id="consistency-mae-mean">로딩 중...</td>
+                        <td id="model-mae-variability">로딩 중...</td>
+                    </tr>
+                </table>
+            </div>
 
-            ## 최적 공정 변수
-            - 단위중량(kg): 606.5346
-            - 투입중량(kg): 315.5907
-            - 염색길이(m): 98.5756
-            - 투입중량/길이: 29.8733
-            - 투입중량/액량: 0.0808
-            - 공정진행시간(%): 100.0000
-            - 진행온도: 95.8933
-            - 포속1: 1113.3645
-            - 포속3: 617.6485
-            - 포속4: 618.5842
+            <div class="column">
+                <h3>최적화 일관성</h3>
+                <table>
+                    <tr>
+                        <th>지표</th>
+                        <th>평균</th>
+                        <th>변동 계수</th>
+                    </tr>
+                    <tr>
+                        <td>예측 DE 값</td>
+                        <td id="consistency-predicted-mean">로딩 중...</td>
+                        <td id="optimization-variability">로딩 중...</td>
+                    </tr>
+                    <tr>
+                        <td>목표값과의 오차</td>
+                        <td id="consistency-error-mean">로딩 중...</td>
+                        <td id="optimization-error-variability">로딩 중...</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="insight-box">
+            <h3>일관성 테스트 결과 해석</h3>
+            <ol>
+                <li><strong>모델 안정성</strong>:
+                    <ul>
+                        <li>다양한 랜덤 시드에서도 모델의 설명력(Adjusted R²)이 일관되게 높게 유지됨</li>
+                        <li>RMSE와 MAE의 변동성이 낮아 모델의 예측 성능이 안정적임</li>
+                    </ul>
+                </li>
+                <li><strong>최적화 안정성</strong>:
+                    <ul>
+                        <li>여러 번의 최적화 실행에서도 유사한 결과를 일관되게 도출</li>
+                        <li>목표값에 대한 예측값의 오차가 매우 낮고 안정적임</li>
+                    </ul>
+                </li>
+                <li><strong>시스템 신뢰성</strong>:
+                    <ul>
+                        <li>모델과 최적화 알고리즘이 모두 높은 일관성을 보여 시스템의 신뢰성이 높음</li>
+                        <li>실제 산업 환경에 적용하기에 충분한 안정성을 갖추고 있음</li>
+                    </ul>
+                </li>
+            </ol>
+            <p>
+                일관성 테스트 결과, DyeOptimAI 시스템은 다양한 조건에서도 안정적인 성능을 보이며,
+                실제 염색 공정 최적화에 신뢰성 있게 활용될 수 있음을 확인하였습니다.
+            </p>
         </div>
     </div>
 </div>
@@ -666,5 +695,144 @@
 </div>
 
 <script src="js/script.js"></script>
+
+<!-- 결과 자동 업데이트 스크립트 -->
+<script>
+    // 페이지 로드 시 결과 데이터 가져오기
+    document.addEventListener('DOMContentLoaded', function() {
+        loadResults();
+    });
+
+    // 결과 JSON 파일 로드
+    function loadResults() {
+        // 캐시 방지를 위한 타임스탬프 추가
+        const timestamp = new Date().getTime();
+        fetch(`../results/web_results.json?t=${timestamp}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('결과 파일을 찾을 수 없습니다');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 페이지 콘텐츠 업데이트
+                updatePageContent(data);
+            })
+            .catch(error => {
+                console.error('결과 로드 실패:', error);
+                document.getElementById('last-updated').textContent = '결과를 불러올 수 없습니다.';
+            });
+    }
+
+    // 페이지 내용 업데이트
+    function updatePageContent(data) {
+        // 마지막 업데이트 시간
+        if (document.getElementById('last-updated')) {
+            document.getElementById('last-updated').textContent = `마지막 업데이트: ${data.last_updated}`;
+        }
+
+        // 모델 성능 업데이트
+        if (data.model_performance) {
+            // 개요 탭
+            if (document.getElementById('model-r2')) {
+                document.getElementById('model-r2').textContent = (data.model_performance.adjusted_r2 * 100).toFixed(2) + '%';
+            }
+            if (document.getElementById('model-rmse')) {
+                document.getElementById('model-rmse').textContent = data.model_performance.rmse.toFixed(4);
+            }
+            if (document.getElementById('model-mae')) {
+                document.getElementById('model-mae').textContent = data.model_performance.mae.toFixed(4);
+            }
+
+            // 예측 vs 실제 탭
+            if (document.getElementById('prediction-r2')) {
+                document.getElementById('prediction-r2').textContent = (data.model_performance.adjusted_r2 * 100).toFixed(2) + '%';
+            }
+            if (document.getElementById('prediction-rmse')) {
+                document.getElementById('prediction-rmse').textContent = data.model_performance.rmse.toFixed(4);
+            }
+            if (document.getElementById('prediction-mae')) {
+                document.getElementById('prediction-mae').textContent = data.model_performance.mae.toFixed(4);
+            }
+        }
+
+        // 최적화 결과 업데이트
+        if (data.optimization_results) {
+            // 목표값 업데이트
+            const targetElements = document.querySelectorAll('#target-value, #genetic-target-value, #optimization-target');
+            targetElements.forEach(el => {
+                if (el) el.textContent = data.optimization_results.target_value.toFixed(4);
+            });
+
+            // 예측값 업데이트
+            if (document.getElementById('optimization-predicted')) {
+                document.getElementById('optimization-predicted').textContent = data.optimization_results.predicted_value.toFixed(4);
+            }
+
+            // 오차 업데이트
+            if (document.getElementById('optimization-error')) {
+                document.getElementById('optimization-error').textContent = data.optimization_results.error.toFixed(4);
+            }
+
+            // 최적 파라미터 표 업데이트
+            if (document.getElementById('optimal-parameters-table')) {
+                const impactMap = {
+                    '단위중량(kg)': '염색품질에 큰 영향',
+                    '투입중량(kg)': '염색품질에 큰 영향',
+                    '염색길이(m)': '중간 정도의 영향',
+                    '투입중량/길이': '염색품질에 큰 영향',
+                    '투입중량/액량': '중간 정도의 영향',
+                    '공정진행시간(%)': '제약 조건으로 고정됨',
+                    '진행온도': '낮은 영향',
+                    '포속1': '낮은 영향',
+                    '포속3': '중간 정도의 영향',
+                    '포속4': '낮은 영향'
+                };
+
+                let tableHTML = '<tr><th>변수명</th><th>최적값</th><th>영향</th></tr>';
+
+                for (const [param, value] of Object.entries(data.optimization_results.optimal_parameters)) {
+                    tableHTML += `<tr>
+                        <td>${param}</td>
+                        <td>${parseFloat(value).toFixed(4)}</td>
+                        <td>${impactMap[param] || '영향도 정보 없음'}</td>
+                    </tr>`;
+                }
+
+                document.getElementById('optimal-parameters-table').innerHTML = tableHTML;
+            }
+        }
+
+        // 일관성 테스트 결과 업데이트
+        if (data.consistency_results) {
+            // 테스트 횟수 업데이트
+            if (document.getElementById('n-tests')) {
+                document.getElementById('n-tests').textContent = data.consistency_results.n_tests;
+            }
+
+            // 모델 일관성 업데이트
+            if (document.getElementById('consistency-r2-mean')) {
+                document.getElementById('consistency-r2-mean').textContent = data.consistency_results.model_r2_mean.toFixed(4);
+            }
+            if (document.getElementById('model-r2-variability')) {
+                document.getElementById('model-r2-variability').textContent = data.consistency_results.model_r2_variability.toFixed(2) + '%';
+            }
+            if (document.getElementById('consistency-rmse-mean')) {
+                document.getElementById('consistency-rmse-mean').textContent = data.consistency_results.model_rmse_mean.toFixed(4);
+            }
+            if (document.getElementById('model-rmse-variability')) {
+                document.getElementById('model-rmse-variability').textContent = data.consistency_results.model_rmse_variability.toFixed(2) + '%';
+            }
+
+            // 최적화 일관성 업데이트
+            if (document.getElementById('consistency-predicted-mean')) {
+                document.getElementById('consistency-predicted-mean').textContent = data.consistency_results.optimization_predicted_mean.toFixed(4);
+            }
+            if (document.getElementById('optimization-variability')) {
+                document.getElementById('optimization-variability').textContent = data.consistency_results.optimization_variability.toFixed(2) + '%';
+            }
+        }
+    }
+</script>
 </body>
 </html>
