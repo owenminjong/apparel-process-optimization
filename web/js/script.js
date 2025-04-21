@@ -35,24 +35,24 @@ document.addEventListener('DOMContentLoaded', function() {
  * @param {string} tabName - 활성화할 탭 ID
  */
 function openTab(evt, tabName) {
-    // 모든 탭 컨텐츠 숨기기
+    // 모든 탭 콘텐츠 숨기기
     var tabContents = document.getElementsByClassName("tab-content");
     for (var i = 0; i < tabContents.length; i++) {
-        tabContents[i].classList.remove("active");
+        tabContents[i].style.display = "none";
     }
 
-    // 모든 탭 버튼 비활성화
+    // 모든 탭 버튼에서 active 클래스 제거
     var tabButtons = document.getElementsByClassName("tab-button");
     for (var i = 0; i < tabButtons.length; i++) {
-        tabButtons[i].classList.remove("active");
+        tabButtons[i].className = tabButtons[i].className.replace(" active", "");
     }
 
-    // 클릭된 탭 활성화
-    document.getElementById(tabName).classList.add("active");
-    evt.currentTarget.classList.add("active");
+    // 클릭된 탭 표시 및 active 클래스 추가
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
 
-    // URL 해시 업데이트 (페이지 이동 없이)
-    history.pushState(null, null, '#' + tabName);
+    // URL 해시 업데이트 (페이지 새로고침 없이)
+    window.location.hash = tabName;
 }
 
 /**
@@ -105,3 +105,32 @@ function highlightCode() {
 
 // 페이지 로드 후 코드 강조 실행
 window.addEventListener('load', highlightCode);
+
+function handleHashChange() {
+    var hash = window.location.hash.substring(1);
+    if (hash) {
+        // 해당 ID를 가진 탭 버튼 찾기
+        var buttons = document.getElementsByClassName("tab-button");
+        for (var i = 0; i < buttons.length; i++) {
+            var button = buttons[i];
+            var tabId = button.getAttribute("onclick").match(/openTab\(event, ['"](.+)['"]\)/)[1];
+            if (tabId === hash) {
+                // 해당 탭 버튼 클릭
+                button.click();
+                return;
+            }
+        }
+    }
+
+    // 해시가 없거나 일치하는 탭이 없으면 첫 번째 탭 표시
+    document.getElementsByClassName("tab-button")[0].click();
+}
+
+// 페이지 로드 시 실행
+document.addEventListener("DOMContentLoaded", function() {
+    // URL 해시에 따라 탭 표시
+    handleHashChange();
+
+    // 해시 변경 시 탭 변경
+    window.addEventListener("hashchange", handleHashChange);
+});

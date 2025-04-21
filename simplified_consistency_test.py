@@ -104,7 +104,7 @@ def test_model(test_id=1, random_state=None, data_path='data/preprocessed_data.c
 
     # 결과 저장
     with open(all_results_file, 'w') as f:
-        json.dump(all_results, f, indent=4)
+        json.dump(all_results, f, indent=4,ensure_ascii=False)
 
     return metrics
 
@@ -191,7 +191,7 @@ def test_optimization(test_id=1, target_value=1.5,
     }
 
     with open(f'{results_dir}/summary.json', 'w') as f:
-        json.dump(test_summary, f, indent=4)
+        json.dump(test_summary, f, indent=4,ensure_ascii=False)
 
     # 최적화 수렴 그래프 저장
     plt.figure(figsize=(10, 6))
@@ -313,7 +313,7 @@ def analyze_consistency():
             }
 
             with open('test_results/model_consistency_summary.json', 'w') as f:
-                json.dump(model_summary, f, indent=4)
+                json.dump(model_summary, f, indent=4, ensure_ascii=False)
 
     # 최적화 결과 분석
     optimization_results_file = 'test_results/all_optimization_results.json'
@@ -377,7 +377,7 @@ def analyze_consistency():
             }
 
             with open('test_results/optimization_consistency_summary.json', 'w') as f:
-                json.dump(opt_summary, f, indent=4)
+                json.dump(opt_summary, f, indent=4, ensure_ascii=False)
 
             # 최적 파라미터 분석 (첫 번째 테스트 결과에서 변수 이름 추출)
             param_names = list(opt_results[0]['optimal_parameters'].keys())
@@ -416,7 +416,7 @@ def analyze_consistency():
                 param_summary[f'{param}_std'] = param_std[param]
 
             with open('test_results/parameter_consistency_summary.json', 'w') as f:
-                json.dump(param_summary, f, indent=4)
+                json.dump(param_summary, f, indent=4,ensure_ascii=False)
 
     # 일관성 보고서 생성
     generate_report()
@@ -450,6 +450,24 @@ def generate_report():
             "# DyeOptimAI - 일관성 테스트 보고서",
             f"생성 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
             "",
+            "## 테스트 결과 파일 목록",
+            "이 보고서는 다음 파일들의 분석 결과를 종합합니다:",
+            "",
+            "### 모델 관련 파일",
+            "* `all_model_results.json`: 모든 모델 테스트 결과를 담은 파일",
+            "* `model_consistency.png`, `model_consistency_plot.png`: 모델 일관성 시각화",
+            "* `model_consistency_summary.json`: 모델 일관성 통계 요약",
+            f"* `model_iter_{{1..{model_summary['n_tests'] if model_summary else '?'}}}.pkl`: 각 반복에서 생성된 모델 파일",
+            "",
+            "### 최적화 관련 파일",
+            "* `all_optimization_results.json`: 모든 최적화 테스트 결과",
+            "* `optimization_consistency.png`: 최적화 일관성 시각화",
+            "* `optimization_consistency_summary.json`: 최적화 일관성 통계 요약",
+            "* `parameter_consistency.png`: 최적 파라미터 일관성 시각화",
+            "* `parameter_consistency_summary.json`: 파라미터 일관성 통계 요약",
+            "",
+            "## 주요 분석 결과",
+            "",
         ]
 
         # 모델 일관성 부분
@@ -457,6 +475,10 @@ def generate_report():
             report_lines.extend([
                 "## 1. 모델 일관성 테스트 결과",
                 f"테스트 횟수: {model_summary['n_tests']}",
+                "",
+                "![모델 일관성 시각화](model_consistency.png)",
+                "",
+                "### 모델 성능 지표",
                 f"* Adjusted R² 평균: {model_summary['adjusted_r2_mean']:.4f} ± {model_summary['adjusted_r2_std']:.4f}",
                 f"* RMSE 평균: {model_summary['rmse_mean']:.4f} ± {model_summary['rmse_std']:.4f}",
                 f"* MAE 평균: {model_summary['mae_mean']:.4f} ± {model_summary['mae_std']:.4f}",
@@ -464,6 +486,7 @@ def generate_report():
                 "### 모델 안정성 평가",
                 f"* 모델의 설명력(Adjusted R²) 변동 계수: {model_summary['adjusted_r2_std']/model_summary['adjusted_r2_mean']*100:.2f}%",
                 f"* RMSE 변동 계수: {model_summary['rmse_std']/model_summary['rmse_mean']*100:.2f}%",
+                f"* MAE 변동 계수: {model_summary['mae_std']/model_summary['mae_mean']*100:.2f}%",
                 ""
             ])
 
@@ -472,6 +495,10 @@ def generate_report():
             report_lines.extend([
                 "## 2. 최적화 일관성 테스트 결과",
                 f"테스트 횟수: {opt_summary['n_tests']}",
+                "",
+                "![최적화 일관성 시각화](optimization_consistency.png)",
+                "",
+                "### 최적화 성능 지표",
                 f"* 목표값: {opt_summary['target_value']:.4f}",
                 f"* 예측값 평균: {opt_summary['predicted_value_mean']:.4f} ± {opt_summary['predicted_value_std']:.4f}",
                 f"* 오차 평균: {opt_summary['error_mean']:.4f} ± {opt_summary['error_std']:.4f}",
@@ -484,14 +511,27 @@ def generate_report():
 
         # 파라미터 일관성 부분
         if param_summary:
-            report_lines.extend(["### 주요 변수 최적값 분포"])
+            report_lines.extend([
+                "### 주요 변수 최적값 분포",
+                "",
+                "![파라미터 일관성 시각화](parameter_consistency.png)",
+                ""
+            ])
+
+            # 파라미터 값과 변동성 표 형태로 추가
+            report_lines.extend([
+                "| 변수명 | 최적값 (평균 ± 표준편차) | 변동 계수 |",
+                "| --- | --- | --- |"
+            ])
 
             for key in param_summary:
                 if '_mean' in key:
                     param_name = key.replace('_mean', '')
                     std_key = key.replace('_mean', '_std')
                     if std_key in param_summary:
-                        report_lines.append(f"* {param_name}: {param_summary[key]:.4f} ± {param_summary[std_key]:.4f}")
+                        # 변동 계수 계산 (표준편차/평균 * 100%)
+                        cv = (param_summary[std_key] / param_summary[key]) * 100 if param_summary[key] != 0 else 0
+                        report_lines.append(f"| {param_name} | {param_summary[key]:.4f} ± {param_summary[std_key]:.4f} | {cv:.2f}% |")
 
             report_lines.append("")
 
@@ -511,9 +551,9 @@ def generate_report():
                 model_stability = "낮은"
 
             # 최적화 일관성 평가
-            if opt_summary['error_std'] < 0.01:
+            if opt_summary['predicted_value_std'] < 0.01:
                 opt_stability = "높은"
-            elif opt_summary['error_std'] < 0.05:
+            elif opt_summary['predicted_value_std'] < 0.05:
                 opt_stability = "중간"
             else:
                 opt_stability = "낮은"
@@ -543,13 +583,15 @@ def generate_report():
         ])
 
         # 보고서 저장
-        with open('test_results/consistency_report.md', 'w') as f:
+        with open('test_results/consistency_report.md', 'w', encoding='utf-8') as f:
             f.write('\n'.join(report_lines))
 
         print("\n일관성 테스트 보고서가 'test_results/consistency_report.md'에 저장되었습니다.")
 
     except Exception as e:
         print(f"보고서 생성 중 오류 발생: {e}")
+        import traceback
+        traceback.print_exc()
 
 def main():
     """명령행 인수를 파싱하고 지정된 테스트를 실행합니다."""

@@ -823,6 +823,17 @@
             if (document.getElementById('model-rmse-variability')) {
                 document.getElementById('model-rmse-variability').textContent = data.consistency_results.model_rmse_variability.toFixed(2) + '%';
             }
+            // MAE 필드 추가
+            if (document.getElementById('consistency-mae-mean')) {
+                document.getElementById('consistency-mae-mean').textContent =
+                    data.consistency_results.model_mae_mean ?
+                        data.consistency_results.model_mae_mean.toFixed(4) : "데이터 없음";
+            }
+            if (document.getElementById('model-mae-variability')) {
+                document.getElementById('model-mae-variability').textContent =
+                    data.consistency_results.model_mae_variability ?
+                        data.consistency_results.model_mae_variability.toFixed(2) + '%' : "데이터 없음";
+            }
 
             // 최적화 일관성 업데이트
             if (document.getElementById('consistency-predicted-mean')) {
@@ -830,6 +841,21 @@
             }
             if (document.getElementById('optimization-variability')) {
                 document.getElementById('optimization-variability').textContent = data.consistency_results.optimization_variability.toFixed(2) + '%';
+            }
+            // 오차 필드 추가
+            if (document.getElementById('consistency-error-mean')) {
+                // optimization_error_mean이 없으면 대체값 계산 시도
+                let errorMean = data.consistency_results.optimization_error_mean;
+                if (errorMean === undefined && data.optimization_results && data.consistency_results.optimization_predicted_mean) {
+                    errorMean = Math.abs(data.optimization_results.target_value - data.consistency_results.optimization_predicted_mean);
+                }
+                document.getElementById('consistency-error-mean').textContent =
+                    errorMean !== undefined ? errorMean.toFixed(4) : "데이터 없음";
+            }
+            if (document.getElementById('optimization-error-variability')) {
+                document.getElementById('optimization-error-variability').textContent =
+                    data.consistency_results.optimization_error_variability ?
+                        data.consistency_results.optimization_error_variability.toFixed(2) + '%' : "데이터 없음";
             }
         }
     }
